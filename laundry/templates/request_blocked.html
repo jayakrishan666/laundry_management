@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Request Blocked{% endblock %}
+{% block content %}
+<h3>Request Blocked</h3>
+<p>You cannot request a new wash until your last request is completed.</p>
+<a href="{% url 'dashboard' %}" class="btn btn-secondary">Go Back</a>
+{% endblock %}

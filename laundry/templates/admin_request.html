@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Admin - Laundry Requests{% endblock %}
+{% block content %}
+<h2 class="mb-3">Admin - Laundry Requests</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>ID</th>
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Status</th>
+            <th>Update</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for request in requests %}
+        <tr>
+            <td>{{ request.user.username }}</td>
+            <td></strong> {{ request.user.id }}</td>
+
+            <td>{% for item in request.laundryrequestitem_set.all %}
+                <li>{{ item.item.name }}</li>
+            {% endfor %}</td>
+            <td>{% for item in request.laundryrequestitem_set.all %}
+                <li>({{ item.quantity }})</li>
+            {% endfor %}</td>
+            <td>
+                {% if request.status == 'Completed' %}
+                    <span class="badge bg-success">{{ request.status }}</span>
+                {% elif request.status == 'In Progress' %}
+                    <span class="badge bg-warning">{{ request.status }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ request.status }}</span>
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'update_status' request.id %}" class="btn btn-sm btn-info">Update Status</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

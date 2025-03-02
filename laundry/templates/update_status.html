@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Update Laundry Status{% endblock %}
+{% block content %}
+<div class="card mx-auto" style="max-width: 500px;">
+    <div class="card-body">
+        <h3 class="text-center">Update Status</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <label for="status">Select Status:</label>
+            <select name="status" class="form-control">
+                <option value="Pending" {% if laundry_request.status == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Recieved" {% if laundry_request.status == 'Recieved' %}selected{% endif %}>Recieved</option>
+                <option value="In Progress" {% if laundry_request.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                <option value="Completed" {% if laundry_request.status == 'Completed' %}selected{% endif %}>Completed</option>
+            </select>
+            <button type="submit" class="btn btn-success w-100 mt-3">Update</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

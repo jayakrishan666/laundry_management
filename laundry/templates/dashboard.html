@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h2 class="mb-3">Your Laundry Requests</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Items</th>
+            <th>Quantity</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for request in requests %}
+        <tr>
+            <td>{{ request.created_at|date:"Y-m-d H:i" }}</td>
+            <td>
+                <ul>
+                {% for item in request.laundryrequestitem_set.all %}
+                    <li>{{ item.item.name }} ({{ item.quantity }})</li>
+                {% endfor %}
+                </ul>
+            </td>
+            <td>{{ request.laundryrequestitem_set.all|length }}</td>
+            <td>
+                {% if request.status == 'Completed' %}
+                    <span class="badge bg-success">{{ request.status }}</span>
+                {% elif request.status == 'In Progress' %}
+                    <span class="badge bg-warning">{{ request.status }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ request.status }}</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+            <tr><td colspan="3" class="text-center">No active laundry requests.</td></tr>
+        {% endfor %}
+        
+    </tbody>
+</table>
+
+{% endblock %}
