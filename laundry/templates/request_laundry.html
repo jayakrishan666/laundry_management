@@ -13,8 +13,14 @@
             <input type="checkbox" name="items" value="{{ item.id }}" style="display: none;" onchange="toggleCard(this)">
             <div style="font-size: 18px; margin-bottom: 12px;">{{ item.name }}</div>
 
-            <input type="number" name="quantities" min="1" value="1"
-                   style="width: 100%; padding: 8px; border: none; border-radius: 8px; background: #121225; color: white; outline: none;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <button type="button" onclick="adjustQuantity(this, -1)" style="background: #00adb5; color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer;">-</button>
+
+                <input type="number" name="quantities" min="1" value="1"
+                       style="width: 80px; padding: 8px; border: none; border-radius: 8px; background: #121225; color: white; outline: none; text-align: center;">
+
+                <button type="button" onclick="adjustQuantity(this, 1)" style="background: #00adb5; color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer;">+</button>
+            </div>
         </label>
     </div>
     {% endfor %}
@@ -28,15 +34,22 @@
 </form>
 
 <script>
-    function toggleCard(checkbox) {
+     function toggleCard(checkbox) {
         const card = checkbox.parentNode.parentNode;
         if (checkbox.checked) {
             card.style.transform = 'scale(1.05)';
-            card.style.boxShadow = '0 12px 30px rgba(0, 255, 200, 0.7)';
+            card.style.outline = '3px solid blue'; // Solid blue stroke
+            card.style.outlineOffset = '5px'; // Optional: Adds space between the card and the outline
         } else {
             card.style.transform = 'scale(1)';
-            card.style.boxShadow = '0 10px 25px rgba(0,0,0,0.6)';
+            card.style.outline = 'none'; // Remove the stroke
         }
+    }
+
+    function adjustQuantity(button, amount) {
+        const input = button.parentNode.querySelector('input[type=number]');
+        let currentValue = parseInt(input.value, 10) || 1;
+        input.value = Math.max(1, currentValue + amount);
     }
 </script>
 
