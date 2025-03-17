@@ -5,24 +5,24 @@
     <div style="background: #1e1e2f; padding: 40px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); max-width: 400px; width: 100%;">
         <h2 style="text-align: center; color: #ffffff; margin-bottom: 20px;">Login</h2>
         
-        {% if messages %}
+        <!-- {% if messages %}
             <div style="color: #ff4d4f; margin-bottom: 20px; text-align: center;">
                 {% for message in messages %}
                     {{ message }}
                 {% endfor %}
             </div>
-        {% endif %}
+        {% endif %} -->
         
         <form method="POST" action="">
             {% csrf_token %}
             <div style="margin-bottom: 15px;">
                 <input type="text" name="username" placeholder="Username" required
-                    style="width: 90%; padding: 10px; border: none; border-radius: 8px; background: #2b2b3b; color: white; outline: none;">
+                    style="width: 100%; padding: 10px; border: none; border-radius: 8px; background: #2b2b3b; color: white; outline: none;">
             </div>
 
             <div style="margin-bottom: 20px;">
                 <input type="password" name="password" placeholder="Password" required
-                    style="width: 90%; padding: 10px; border: none; border-radius: 8px; background: #2b2b3b; color: white; outline: none;">
+                    style="width: 100%; padding: 10px; border: none; border-radius: 8px; background: #2b2b3b; color: white; outline: none;">
             </div>
 
             <button type="submit" style="width: 100%; padding: 10px; background: linear-gradient(45deg, #00c9a7, #008d69); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px;">
