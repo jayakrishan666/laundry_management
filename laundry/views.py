@@ -118,19 +118,37 @@ def admin_laundry_requests(request):
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
+from django.core.mail import send_mail
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from .models import LaundryRequest
 
 @staff_member_required
 def update_laundry_status(request, request_id):
-    """Admin updates laundry request status."""
     laundry_request = get_object_or_404(LaundryRequest, id=request_id)
-
-    if request.method == "POST":
+    
+    if request.method == 'POST':
         new_status = request.POST.get('status')
         laundry_request.status = new_status
         laundry_request.save()
-        return HttpResponseRedirect(reverse('admin_requests'))  # Redirect to admin panel
 
-    return render(request, 'update_status.html', {'laundry_request': laundry_request})
+        # Send email if status is 'Completed'
+        if new_status == 'Completed':
+            send_mail(
+                'Your Laundry Request is Completed',
+                f'Hello {laundry_request.user.username},\n\nYour laundry request (ID: {laundry_request.id}) has been completed successfully, Pick your laundry',
+                'your_email@example.com',  # Sender email
+                [laundry_request.user.email],  # Receiver email
+                fail_silently=False,
+            )
+            messages.success(request, 'Status updated and email sent successfully!')
+
+        else:
+            messages.success(request, 'Status updated successfully!')
+
+        return redirect('admin_requests')
+
+    return render(request, 'update_status.html', {'request': laundry_request})
 
 # Submit Feedback
 @login_required
