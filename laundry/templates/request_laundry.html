@@ -1,18 +1,43 @@
 {% extends 'base.html' %}
 {% block title %}Request Laundry{% endblock %}
 {% block content %}
-<h3>Request Laundry</h3>
 
-<form method="POST">
+<h2 style="text-align: center; color: #ffffff; margin-bottom: 30px;">Request Laundry</h2>
+
+<form method="POST" action="" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%; max-width: 1200px; margin: 0 auto;">
     {% csrf_token %}
+
     {% for item in items %}
-    <div class="mb-2">
-        <label>
-            <input type="checkbox" name="items" value="{{ item.id }}"> {{ item.name }}
+    <div style="background: linear-gradient(145deg, #23233d, #1a1a2e); padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); flex: 1 1 300px; text-align: center; transition: transform 0.3s; min-width: 280px;">
+        <label style="color: #fff; display: block; cursor: pointer;">
+            <input type="checkbox" name="items" value="{{ item.id }}" style="display: none;" onchange="toggleCard(this)">
+            <div style="font-size: 18px; margin-bottom: 12px;">{{ item.name }}</div>
+
+            <input type="number" name="quantities" min="1" value="1"
+                   style="width: 100%; padding: 8px; border: none; border-radius: 8px; background: #121225; color: white; outline: none;">
         </label>
-        <input type="number" name="quantities" min="1" value="1" class="form-control w-25 d-inline">
     </div>
     {% endfor %}
-    <button type="submit" class="btn btn-primary">Submit Request</button>
+
+    <button type="submit"
+            style="width: 300px; padding: 12px; background: linear-gradient(90deg, #00adb5, #008d69); color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); margin-top: 30px;"
+            onmouseover="this.style.background='linear-gradient(90deg, #008d69, #00adb5)'"
+            onmouseout="this.style.background='linear-gradient(90deg, #00adb5, #008d69)'">
+        Submit Request
+    </button>
 </form>
+
+<script>
+    function toggleCard(checkbox) {
+        const card = checkbox.parentNode.parentNode;
+        if (checkbox.checked) {
+            card.style.transform = 'scale(1.05)';
+            card.style.boxShadow = '0 12px 30px rgba(0, 255, 200, 0.7)';
+        } else {
+            card.style.transform = 'scale(1)';
+            card.style.boxShadow = '0 10px 25px rgba(0,0,0,0.6)';
+        }
+    }
+</script>
+
 {% endblock %}

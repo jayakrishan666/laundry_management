@@ -1,7 +1,28 @@
 {% extends 'base.html' %}
 {% block title %}Request Blocked{% endblock %}
 {% block content %}
-<h3>Request Blocked</h3>
-<p>You cannot request a new wash until your last request is completed.</p>
-<a href="{% url 'dashboard' %}" class="btn btn-secondary">Go Back</a>
+
+<div style=" justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #1a1a2e, #16213e); text-align: center;">
+
+    <div style="background: #0f3460; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8); max-width: 500px; width: 100%;">
+
+        <h2 style="color: #ff4c4c; margin-bottom: 20px; font-size: 2rem;">
+            🚫 Request Blocked
+        </h2>
+
+        <p style="color: #ffffff; font-size: 1.1rem; margin-bottom: 30px;">
+            You cannot request a new wash until your last request is completed. Please wait until it's finished before proceeding.
+        </p>
+
+        <a href="{% url 'dashboard' %}"
+           style="display: inline-block; padding: 12px 30px; border-radius: 12px; background: linear-gradient(90deg, #00adb5, #00fff5); color: #0f3460; font-weight: bold; text-decoration: none; transition: background 0.3s;"
+           onmouseover="this.style.background='linear-gradient(90deg, #00fff5, #00adb5)'"
+           onmouseout="this.style.background='linear-gradient(90deg, #00adb5, #00fff5)'">
+            🔙 Go Back to Dashboard
+        </a>
+
+    </div>
+
+</div>
+
 {% endblock %}

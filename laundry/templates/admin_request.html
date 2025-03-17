@@ -1,45 +1,72 @@
 {% extends 'base.html' %}
 {% block title %}Admin - Laundry Requests{% endblock %}
 {% block content %}
-<h2 class="mb-3">Admin - Laundry Requests</h2>
 
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>User</th>
-            <th>ID</th>
-            <th>Item</th>
-            <th>Quantity</th>
-            <th>Status</th>
-            <th>Update</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for request in requests %}
-        <tr>
-            <td>{{ request.user.username }}</td>
-            <td></strong> {{ request.user.id }}</td>
+<div style="min-height: 100vh; background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 40px;">
+    <h2 style="color: #00fff5; text-align: center; margin-bottom: 40px; font-size: 2.5rem;">
+        Admin - Laundry Requests
+    </h2>
 
-            <td>{% for item in request.laundryrequestitem_set.all %}
-                <li>{{ item.item.name }}</li>
-            {% endfor %}</td>
-            <td>{% for item in request.laundryrequestitem_set.all %}
-                <li>({{ item.quantity }})</li>
-            {% endfor %}</td>
-            <td>
-                {% if request.status == 'Completed' %}
-                    <span class="badge bg-success">{{ request.status }}</span>
-                {% elif request.status == 'In Progress' %}
-                    <span class="badge bg-warning">{{ request.status }}</span>
-                {% else %}
-                    <span class="badge bg-secondary">{{ request.status }}</span>
-                {% endif %}
-            </td>
-            <td>
-                <a href="{% url 'update_status' request.id %}" class="btn btn-sm btn-info">Update Status</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; background: #0f3460; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);">
+            <thead>
+                <tr style="background: #459094; color: #16213e;">
+                    <th style="padding: 12px; text-align: left;">User</th>
+                    <th style="padding: 12px; text-align: left;">User ID</th>
+                    <th style="padding: 12px; text-align: left;">Items</th>
+                    <th style="padding: 12px; text-align: left;">Quantities</th>
+                    <th style="padding: 12px; text-align: left;">Status</th>
+                    <th style="padding: 12px; text-align: left;">Update</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in requests %}
+                <tr style="border-top: 1px solid #1a1a2e;">
+                    <td style="padding: 16px; color: white;">{{ request.user.username }}</td>
+                    <td style="padding: 16px; color: white;">{{ request.user.id }}</td>
+
+                    <td style="padding: 16px; color: white;">
+                        {% for item in request.laundryrequestitem_set.all %}
+                            <div>{{ item.item.name }}</div>
+                        {% endfor %}
+                    </td>
+
+                    <td style="padding: 16px; color: white;">
+                        {% for item in request.laundryrequestitem_set.all %}
+                            <div>{{ item.quantity }}</div>
+                        {% endfor %}
+                    </td>
+
+                    <td style="padding: 16px;">
+                        {% if request.status == 'Completed' %}
+                            <span style="background: #28a745; color: white; padding: 6px 12px; border-radius: 8px;">{{ request.status }}</span>
+                        {% elif request.status == 'In Progress' %}
+                            <span style="background: #ffc107; color: #16213e; padding: 6px 12px; border-radius: 8px;">{{ request.status }}</span>
+                        {% else %}
+                            <span style="background: #6c757d; color: white; padding: 6px 12px; border-radius: 8px;">{{ request.status }}</span>
+                        {% endif %}
+                    </td>
+
+                    <td style="padding: 16px;">
+                        <a href="{% url 'update_status' request.id %}"
+                           style="display: inline-block; padding: 8px 16px; background: linear-gradient(90deg, #ffffff, #ffffff); color: #0f3460; border-radius: 8px; text-decoration: none; font-weight: bold; transition: background 0.3s;"
+                           onmouseover="this.style.background='linear-gradient(90deg, #00fff5, #00adb5)'"
+                           onmouseout="this.style.background='linear-gradient(90deg, #00adb5, #00fff5)'">
+                             Update Status
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="padding: 20px; text-align: center; color: white;">
+                        No laundry requests available.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
 {% endblock %}

@@ -1,20 +1,61 @@
 {% extends 'base.html' %}
 {% block title %}Update Laundry Status{% endblock %}
 {% block content %}
-<div class="card mx-auto" style="max-width: 500px;">
-    <div class="card-body">
-        <h3 class="text-center">Update Status</h3>
-        <form method="POST">
+
+<div style="min-height: 100vh;  justify-content: center; align-items: center; background: linear-gradient(135deg, #1a1a2e, #16213e); color: white;">
+
+    <div class="card" style="background: #0f3460; max-width: 600px; padding: 50px; border-radius: 20px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.9); width: 100%;">
+
+        <!-- Title -->
+        <h2 class="text-center mb-5" style="color: #00fff5; font-size: 2.5rem; letter-spacing: 1px;">
+            🔄 Update Laundry Status
+        </h2>
+
+        <!-- Form -->
+        <form method="POST" style="display: flex; flex-direction: column; gap: 30px;">
             {% csrf_token %}
-            <label for="status">Select Status:</label>
-            <select name="status" class="form-control">
-                <option value="Pending" {% if laundry_request.status == 'Pending' %}selected{% endif %}>Pending</option>
-                <option value="Recieved" {% if laundry_request.status == 'Recieved' %}selected{% endif %}>Recieved</option>
-                <option value="In Progress" {% if laundry_request.status == 'In Progress' %}selected{% endif %}>In Progress</option>
-                <option value="Completed" {% if laundry_request.status == 'Completed' %}selected{% endif %}>Completed</option>
+
+            <!-- Status Label -->
+            <label for="status" style="font-size: 1.3rem; font-weight: 600;">
+                Select Status:
+            </label>
+
+            <!-- Status Dropdown -->
+            <select name="status" id="status" class="form-control"
+                style="background: #1a1a2e; color: white; padding: 12px; border: none; border-radius: 12px; font-size: 1.1rem;">
+                
+                <option value="Pending" {% if laundry_request.status == 'Pending' %}selected{% endif %}>
+                    🟡 Pending
+                </option>
+                <option value="Recieved" {% if laundry_request.status == 'Recieved' %}selected{% endif %}>
+                    📦 Received
+                </option>
+                <option value="In Progress" {% if laundry_request.status == 'In Progress' %}selected{% endif %}>
+                    🔧 In Progress
+                </option>
+                <option value="Completed" {% if laundry_request.status == 'Completed' %}selected{% endif %}>
+                    ✅ Completed
+                </option>
             </select>
-            <button type="submit" class="btn btn-success w-100 mt-3">Update</button>
+
+            <!-- Update Button -->
+            <button type="submit" class="btn btn-success"
+                style="background: linear-gradient(90deg, #00adb5, #00fff5); color: #0f3460; padding: 14px; border-radius: 12px; font-size: 1.3rem; font-weight: bold; text-align: center; transition: 0.3s ease;"
+                onmouseover="this.style.background='linear-gradient(90deg, #00fff5, #00adb5)'"
+                onmouseout="this.style.background='linear-gradient(90deg, #00adb5, #00fff5)'">
+                🔄 Update Status
+            </button>
+
+            <!-- Back Button -->
+            <a href="{% url 'admin_requests' %}" class="btn btn-secondary"
+                style="background: #1a1a2e; color: white; padding: 14px; border-radius: 12px; font-size: 1.2rem; text-align: center; text-decoration: none;">
+                ⬅️ Back to Admin Panel
+            </a>
+
         </form>
+
     </div>
+
 </div>
+
 {% endblock %}
