@@ -182,3 +182,14 @@ def add_laundry_item(request):
 
     items = LaundryItem.objects.all()
     return render(request, "add_laundry_item.html", {"items": items})
+
+@staff_member_required
+def delete_laundry_item(request, item_id):
+    """Admin can delete laundry items."""
+    try:
+        item = LaundryItem.objects.get(id=item_id)
+        item.delete()
+        messages.success(request, "Item deleted successfully!")
+    except LaundryItem.DoesNotExist:
+        messages.error(request, "Item not found!")
+    return redirect("add_laundry_item")

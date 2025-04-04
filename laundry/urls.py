@@ -12,6 +12,7 @@ urlpatterns = [
     path('feedback/', views.submit_feedback, name='feedback'),
     path('logout/', views.user_logout, name='logout'),
     path('aadd-laundry-item/', views.add_laundry_item, name='add_laundry_item'),
+    path('delete-laundry-item/<int:item_id>/', views.delete_laundry_item, name='delete_laundry_item'),
     path('request-laundry/', views.request_laundry, name='request_laundry'),
     path("history/", request_history, name="history"),  # New history page
     

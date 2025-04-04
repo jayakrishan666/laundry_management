@@ -34,8 +34,15 @@
 
     <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;">
         {% for item in items %}
-            <div style="background: #0f3460; padding: 12px 20px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); font-size: 1.1rem;">
-                {{ item.name }}
+            <div style="background: #0f3460; padding: 12px 20px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); font-size: 1.1rem; display: flex; align-items: center; gap: 15px;">
+                <span>{{ item.name }}</span>
+                <a href="{% url 'delete_laundry_item' item.id %}" 
+                   onclick="return confirm('Are you sure you want to delete this item?')"
+                   style="background: #ff4444; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; transition: background 0.3s;"
+                   onmouseover="this.style.background='#cc0000'"
+                   onmouseout="this.style.background='#ff4444'">
+                     Delete
+                </a>
             </div>
         {% empty %}
             <p style="text-align: center; width: 100%;">No laundry items available.</p>
