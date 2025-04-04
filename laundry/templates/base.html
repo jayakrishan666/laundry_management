@@ -53,6 +53,7 @@
             {% if user.is_authenticated %}
                 {% if user.is_staff %}
                     <a href="{% url 'admin_requests' %}">Admin Panel</a>
+                    <a href="{% url 'user_management' %}">User Management</a>
                     <a href="{% url 'add_laundry_item' %}">Add Items</a>
                 {% else %}
                     <a href="{% url 'dashboard' %}">Dashboard</a>
@@ -94,25 +95,20 @@
     </div>
 </div>
 
+<!-- Store messages in data attribute -->
+<div id="django-messages" data-messages="{% for message in messages %}{{ message|escapejs }}{% if not forloop.last %}||{% endif %}{% endfor %}" style="display: none;"></div>
+
 <script>
     $(document).ready(function() {
-        // Collect Django messages from the template context
-        var messages = [];
-
-        {% for message in messages %}
-            messages.push("{{ message|escapejs }}");
-        {% endfor %}
-
-        // Show the modal if there are any messages
+        var messagesData = $('#django-messages').data('messages');
+        var messages = messagesData ? messagesData.split('||') : [];
+        
         if (messages.length > 0) {
             $('#modalMessageBody').html(messages.join('<br>'));
             $('#messageModal').modal('show');
         }
     });
-    
 </script>
-
-
 
 </body>
 </html>

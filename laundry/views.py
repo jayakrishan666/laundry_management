@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
@@ -8,6 +8,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import UserProfile
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .models import LaundryItem, LaundryRequestItem
+import json
 
 # User Registration & Login
 def register_user(request):
@@ -31,16 +35,28 @@ def register_user(request):
             messages.error(request, "Email already registered!")
             return redirect("register")
 
-        # ✅ Create the user
-        user = User.objects.create_user(username=username, email=email, password=password)
+        try:
+            # Create the user
+            user = User.objects.create_user(username=username, email=email, password=password)
+            user.first_name = name
+            user.save()
 
-        # ✅ Check if a UserProfile already exists before creating one
-        profile, created = UserProfile.objects.get_or_create(user=user, defaults={"name": name, "phone": phone})
+            # Create or get UserProfile
+            UserProfile.objects.get_or_create(
+                user=user,
+                defaults={'phone': phone}
+            )
 
-        messages.success(request, "Registration successful! You are now logged in.")
-        
-        login(request, user)
-        return redirect("request_laundry")  
+            messages.success(request, "Registration successful! You are now logged in.")
+            login(request, user)
+            return redirect("request_laundry")
+            
+        except Exception as e:
+            # If anything goes wrong, delete the user and show error
+            if 'user' in locals():
+                user.delete()
+            messages.error(request, f"Registration failed: {str(e)}")
+            return redirect("register")
 
     return render(request, "register.html")
 
@@ -117,9 +133,8 @@ def admin_laundry_requests(request):
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.core.mail import send_mail
-from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from .models import LaundryRequest
 
@@ -193,3 +208,50 @@ def delete_laundry_item(request, item_id):
     except LaundryItem.DoesNotExist:
         messages.error(request, "Item not found!")
     return redirect("add_laundry_item")
+
+@staff_member_required
+def user_management(request):
+    """Admin view for managing users."""
+    users = UserProfile.objects.all().select_related('user')
+    return render(request, 'user_management.html', {'users': users})
+
+@staff_member_required
+@require_POST
+def remove_user(request, user_id):
+    """Remove a user from the system."""
+    try:
+        user = User.objects.get(id=user_id)
+        user.delete()
+        return JsonResponse({'success': True})
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@staff_member_required
+def user_history(request, user_id):
+    """Get the laundry request history for a specific user."""
+    try:
+        user = User.objects.get(id=user_id)
+        requests = LaundryRequest.objects.filter(user=user).order_by('-created_at')
+        
+        history = []
+        for req in requests:
+            items = []
+            for request_item in req.laundryrequestitem_set.all():
+                items.append({
+                    'name': request_item.item.name,
+                    'quantity': request_item.quantity
+                })
+            
+            history.append({
+                'date': req.created_at.strftime('%B %d, %Y'),
+                'status': req.status,
+                'items': items
+            })
+        
+        return JsonResponse({'success': True, 'history': history})
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

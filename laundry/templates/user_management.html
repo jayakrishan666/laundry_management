@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block title %}User Management{% endblock %}
+{% block content %}
+
+<div style="min-height: 100vh; background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 40px; color: white;">
+    <h2 style="text-align: center; color: #00adb5; margin-bottom: 40px; font-size: 2.5rem;">
+        👥 User Management
+    </h2>
+
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <!-- User List Section -->
+        <div style="background: #0f3460; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); margin-bottom: 30px;">
+            <h3 style="color: #00adb5; margin-bottom: 20px;">Registered Users</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                {% for user in users %}
+                <div class="user-card" style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; transition: all 0.3s ease;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="color: #00adb5; margin: 0;" data-user-id="{{ user.user.id }}">{{ user.user.username }}</h4>
+                        <div>
+                            <button onclick="viewUserHistory('{{ user.user.id }}')" 
+                                    style="background: #00adb5; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; margin-right: 10px;">
+                                History
+                            </button>
+                            <button onclick="removeUser('{{ user.user.id }}')" 
+                                    style="background: #ff4757; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer;">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                    <div style="color: #a4b0be;">
+                        <p><strong>Name:</strong> {{ user.user.username }}</p>
+                        <p><strong>Email:</strong> {{ user.user.email }}</p>
+                        <p><strong>Phone:</strong> {{ user.phone }}</p>
+                        <p><strong>Date Joined:</strong> {{ user.user.date_joined|date:"F j, Y" }}</p>
+                        <p><strong>Last Login:</strong> {{ user.user.last_login|date:"F j, Y, g:i a" }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- User History Modal -->
+        <div id="historyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000;">
+            <div style="background: #0f3460; max-width: 800px; margin: 50px auto; padding: 30px; border-radius: 16px; position: relative; max-height: 80vh; overflow-y: auto;">
+                <button onclick="closeHistoryModal()" 
+                        style="position: absolute; top: 15px; right: 15px; background: #ff4757; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                    ×
+                </button>
+                <h3 style="color: #00adb5; margin-bottom: 20px; padding-right: 40px;" id="historyTitle">User History</h3>
+                <div id="historyContent">
+                    <!-- History content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .user-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,173,181,0.3);
+    }
+    
+    button:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+    }
+</style>
+
+<script>
+    function viewUserHistory(userId) {
+        const username = document.querySelector(`[data-user-id="${userId}"]`).textContent;
+        fetch(`/user-history/${userId}/`)
+            .then(response => response.json())
+            .then(data => {
+                const modal = document.getElementById('historyModal');
+                const content = document.getElementById('historyContent');
+                const title = document.getElementById('historyTitle');
+                
+                title.textContent = `Laundry History - ${username}`;
+                
+                let html = '<div style="color: #a4b0be;">';
+                if (data.history.length === 0) {
+                    html += '<p style="text-align: center; padding: 20px;">No laundry history available for this user.</p>';
+                } else {
+                    data.history.forEach(record => {
+                        let statusColor;
+                        switch(record.status) {
+                            case 'Completed':
+                                statusColor = '#2ed573';
+                                break;
+                            case 'Processing':
+                                statusColor = '#ffa502';
+                                break;
+                            default:
+                                statusColor = '#a4b0be';
+                        }
+                        
+                        html += `
+                            <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid ${statusColor};">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <span style="color: #00adb5; font-size: 1.1em;">${record.date}</span>
+                                    <span style="color: ${statusColor}; font-weight: bold;">${record.status}</span>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
+                                    <h4 style="color: #00adb5; margin-bottom: 10px;">Requested Items:</h4>
+                                    <ul style="list-style-type: none; padding: 0; margin: 0;">
+                                        ${record.items.map(item => `
+                                            <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                                <span>🧺 ${item.name}</span>
+                                                <span style="color: #00adb5;">×${item.quantity}</span>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                html += '</div>';
+                
+                content.innerHTML = html;
+                modal.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error loading user history. Please try again.');
+            });
+    }
+
+    function closeHistoryModal() {
+        document.getElementById('historyModal').style.display = 'none';
+    }
+
+    function removeUser(userId) {
+        if (confirm('Are you sure you want to remove this user? This action cannot be undone.')) {
+            fetch(`/remove-user/${userId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error removing user: ' + data.error);
+                }
+            });
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+
+{% endblock %} 

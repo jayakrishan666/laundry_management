@@ -1,53 +1,75 @@
 {% extends 'base.html' %}
 {% block title %}Register{% endblock %}
 {% block content %}
-<div style="display: flex; justify-content: center; align-items: center; height: 80vh;">
+<div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px;">
     <div style="background: #1e1e2f; padding: 40px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); max-width: 400px; width: 100%;">
         
         <h2 style="text-align: center; color: #ffffff; margin-bottom: 20px;">Register</h2>
 
-        <!-- {% if messages %}
+        {% if messages %}
             <div style="color: #ff4d4f; margin-bottom: 20px; text-align: center;">
                 {% for message in messages %}
                     {{ message }}
                 {% endfor %}
             </div>
-        {% endif %} -->
+        {% endif %}
         
-        <form method="POST" action="">
+        <form method="POST" action="" id="registrationForm" onsubmit="return validateForm()">
             {% csrf_token %}
             
             <div style="margin-bottom: 15px;">
-                <input type="text" name="name" placeholder="Full Name" required
-                    style="width: 90%; padding: 10px; border: none; border-radius: 8px; background: #2b2b3b; color: white; outline: none; ">
+                <input type="text" name="name" id="name" placeholder="Full Name" required
+                    pattern="[A-Za-z ]{2,50}"
+                    title="Name should only contain letters and spaces, between 2-50 characters"
+                    style="width: 90%; padding: 10px; border: 2px solid transparent; border-radius: 8px; background: #2b2b3b; color: white; outline: none;"
+                    oninput="validateField('name')">
+                <div id="nameError" class="error-message"></div>
             </div>
 
             <div style="margin-bottom: 15px;">
-                <input type="email" name="email" placeholder="Email" required
-                    style="width: 90%; padding: 10px; border: none; border-radius: 8px; background: #2b2b3b; color: white; outline: none;">
+                <input type="email" name="email" id="email" placeholder="Email" required
+                    pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                    title="Please enter a valid email address"
+                    style="width: 90%; padding: 10px; border: 2px solid transparent; border-radius: 8px; background: #2b2b3b; color: white; outline: none;"
+                    oninput="validateField('email')">
+                <div id="emailError" class="error-message"></div>
             </div>
 
             <div style="margin-bottom: 15px;">
-                <input type="text" name="phone" placeholder="Phone Number" required
-                    style="width: 90%; padding: 10px; border: none; border-radius: 8px; background: #2b2b3b; color: white; outline: none;">
+                <input type="tel" name="phone" id="phone" placeholder="Phone Number" required
+                    pattern="[0-9]{10}" maxlength="10"
+                    title="Please enter a 10-digit phone number"
+                    style="width: 90%; padding: 10px; border: 2px solid transparent; border-radius: 8px; background: #2b2b3b; color: white; outline: none;"
+                    oninput="validateField('phone')">
+                <div id="phoneError" class="error-message"></div>
             </div>
 
             <div style="margin-bottom: 15px;">
-                <input type="text" name="username" placeholder="Username" required
-                    style="width: 90%; padding: 10px; border: none; border-radius: 8px; background: #2b2b3b; color: white; outline: none;">
+                <input type="text" name="username" id="username" placeholder="Username" required
+                    pattern="[a-zA-Z0-9]{4,20}"
+                    title="Username should be 4-20 characters long and contain only letters and numbers"
+                    style="width: 90%; padding: 10px; border: 2px solid transparent; border-radius: 8px; background: #2b2b3b; color: white; outline: none;"
+                    oninput="validateField('username')">
+                <div id="usernameError" class="error-message"></div>
             </div>
 
             <div style="margin-bottom: 15px;">
-                <input type="password" name="password" placeholder="Password" required
-                    style="width: 90%; padding: 10px; border: none; border-radius: 8px; background: #2b2b3b; color: white; outline: none;">
+                <input type="password" name="password" id="password" placeholder="Password" required
+                    pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
+                    title="Password must be at least 8 characters long and include both letters and numbers"
+                    style="width: 90%; padding: 10px; border: 2px solid transparent; border-radius: 8px; background: #2b2b3b; color: white; outline: none;"
+                    oninput="validateField('password')">
+                <div id="passwordError" class="error-message"></div>
             </div>
 
             <div style="margin-bottom: 20px;">
-                <input type="password" name="confirm_password" placeholder="Confirm Password" required
-                    style="width: 90%; padding: 10px; border: none; border-radius: 8px; background: #2b2b3b; color: white; outline: none;">
+                <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm Password" required
+                    style="width: 90%; padding: 10px; border: 2px solid transparent; border-radius: 8px; background: #2b2b3b; color: white; outline: none;"
+                    oninput="validateField('confirm_password')">
+                <div id="confirm_passwordError" class="error-message"></div>
             </div>
 
-            <button type="submit"
+            <button type="submit" id="submitBtn"
                 style="width: 100%; padding: 12px; background: linear-gradient(45deg, #00c9a7, #008d69); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px;"
                 onmouseover="this.style.background='linear-gradient(45deg, #008d69, #00c9a7)'" 
                 onmouseout="this.style.background='linear-gradient(45deg, #00c9a7, #008d69)'">
@@ -61,4 +83,104 @@
         </form>
     </div>
 </div>
+
+<style>
+    .error-message {
+        color: #ff4d4f;
+        font-size: 12px;
+        margin-top: 5px;
+        min-height: 15px;
+    }
+    input:invalid {
+        border-color: #ff4d4f !important;
+    }
+    input:valid {
+        border-color: #00c9a7 !important;
+    }
+</style>
+
+<script>
+    function validateField(fieldName) {
+        const field = document.getElementById(fieldName);
+        const errorDiv = document.getElementById(fieldName + 'Error');
+        
+        // Reset error message
+        errorDiv.textContent = '';
+        
+        // Validate specific fields
+        switch(fieldName) {
+            case 'name':
+                if (!field.value.match(/^[A-Za-z ]{2,50}$/)) {
+                    errorDiv.textContent = 'Name should only contain letters and spaces (2-50 characters)';
+                }
+                break;
+                
+            case 'email':
+                if (!field.value.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
+                    errorDiv.textContent = 'Please enter a valid email address';
+                }
+                break;
+                
+            case 'phone':
+                if (!field.value.match(/^[0-9]{10}$/)) {
+                    errorDiv.textContent = 'Please enter a valid 10-digit phone number';
+                }
+                break;
+                
+            case 'username':
+                if (!field.value.match(/^[a-zA-Z0-9]{4,20}$/)) {
+                    errorDiv.textContent = 'Username should be 4-20 characters (letters and numbers only)';
+                }
+                break;
+                
+            case 'password':
+                if (!field.value.match(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/)) {
+                    errorDiv.textContent = 'Password must be at least 8 characters with letters and numbers';
+                }
+                break;
+                
+            case 'confirm_password':
+                if (field.value !== document.getElementById('password').value) {
+                    errorDiv.textContent = 'Passwords do not match';
+                }
+                break;
+        }
+        
+        updateSubmitButton();
+    }
+    
+    function validateForm() {
+        let isValid = true;
+        const fields = ['name', 'email', 'phone', 'username', 'password', 'confirm_password'];
+        
+        fields.forEach(field => {
+            validateField(field);
+            const errorDiv = document.getElementById(field + 'Error');
+            if (errorDiv.textContent !== '') {
+                isValid = false;
+            }
+        });
+        
+        return isValid;
+    }
+    
+    function updateSubmitButton() {
+        const submitBtn = document.getElementById('submitBtn');
+        const form = document.getElementById('registrationForm');
+        const isValid = form.checkValidity() && validateForm();
+        
+        submitBtn.style.opacity = isValid ? '1' : '0.7';
+        submitBtn.style.cursor = isValid ? 'pointer' : 'not-allowed';
+    }
+    
+    // Initial validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const fields = ['name', 'email', 'phone', 'username', 'password', 'confirm_password'];
+        fields.forEach(field => {
+            const input = document.getElementById(field);
+            input.addEventListener('input', () => validateField(field));
+        });
+        updateSubmitButton();
+    });
+</script>
 {% endblock %}
