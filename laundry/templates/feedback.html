@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Submit Feedback{% endblock %}
+
+{% block content %}
+<div style="min-height: 100vh; background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 40px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);">
+        <h2 style="color: #2c3e50; text-align: center; margin-bottom: 30px;">Submit Your Feedback</h2>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div style="padding: 15px; margin-bottom: 20px; border-radius: 8px; 
+                            {% if message.tags == 'success' %}
+                                background-color: #d4edda; color: #155724;
+                            {% else %}
+                                background-color: #f8d7da; color: #721c24;
+                            {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" action="{% url 'feedback' %}">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; margin-bottom: 10px; color: #2c3e50; font-weight: bold;">
+                    Rating (1-5 stars)
+                </label>
+                <div style="display: flex; gap: 15px;">
+                    {% for i in "12345" %}
+                        <label style="cursor: pointer;">
+                            <input type="radio" name="rating" value="{{ i }}" required style="display: none;">
+                            <span class="star" data-rating="{{ i }}" style="font-size: 30px; color: #ddd;">★</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label for="comment" style="display: block; margin-bottom: 10px; color: #2c3e50; font-weight: bold;">
+                    Your Comments
+                </label>
+                <textarea id="comment" name="comment" required
+                    style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; 
+                           min-height: 120px; resize: vertical; font-family: inherit;"
+                    placeholder="Please share your experience with our laundry service..."></textarea>
+            </div>
+
+            <button type="submit" 
+                style="width: 100%; padding: 12px; background: linear-gradient(45deg, #00c9a7, #008d69); 
+                       color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px;"
+                onmouseover="this.style.background='linear-gradient(45deg, #008d69, #00c9a7)'" 
+                onmouseout="this.style.background='linear-gradient(45deg, #00c9a7, #008d69)'">
+                Submit Feedback
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .star {
+        transition: color 0.2s;
+    }
+    .star:hover,
+    .star.active {
+        color: #ffc107;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.star');
+        
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.dataset.rating;
+                
+                // Update visual state
+                stars.forEach(s => {
+                    if (s.dataset.rating <= rating) {
+                        s.style.color = '#ffc107';
+                        s.classList.add('active');
+                    } else {
+                        s.style.color = '#ddd';
+                        s.classList.remove('active');
+                    }
+                });
+                
+                // Select the radio button
+                const radio = this.parentElement.querySelector('input[type="radio"]');
+                radio.checked = true;
+            });
+        });
+    });
+</script>
+{% endblock %} 

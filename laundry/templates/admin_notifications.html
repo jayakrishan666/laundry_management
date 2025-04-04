@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Admin - Feedback Notifications{% endblock %}
+
+{% block content %}
+<div style="min-height: 100vh; background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 40px;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h2 style="color: #00fff5; font-size: 2rem;">Feedback Notifications</h2>
+            <a href="{% url 'admin_requests' %}" 
+               style="background: #2ecc71; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">
+                Back to Requests
+            </a>
+        </div>
+
+        {% if messages %}
+            <div style="margin-bottom: 20px;">
+                {% for message in messages %}
+                    <div style="padding: 15px; border-radius: 8px; margin-bottom: 10px;
+                                {% if message.tags == 'success' %}
+                                    background-color: rgba(46, 204, 113, 0.2); color: #2ecc71;
+                                {% else %}
+                                    background-color: rgba(231, 76, 60, 0.2); color: #e74c3c;
+                                {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if unread_feedback %}
+            <div class="feedback-list" style="display: grid; gap: 20px;">
+                {% for feedback in unread_feedback %}
+                    <div style="background: #0f3460; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                            <div>
+                                <h3 style="color: #00fff5; margin: 0; font-size: 1.2rem;">
+                                    {{ feedback.user.username }}
+                                    <span style="font-size: 0.8em; color: #888;">(ID: {{ feedback.user.id }})</span>
+                                </h3>
+                                <p style="color: #888; margin: 5px 0; font-size: 0.9rem;">
+                                    {{ feedback.created_at|date:"F d, Y H:i" }}
+                                </p>
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <div style="background: {% if feedback.rating >= 4 %}#2ecc71{% elif feedback.rating >= 3 %}#f1c40f{% else %}#e74c3c{% endif %}; 
+                                            padding: 5px 15px; border-radius: 20px; color: white;">
+                                    Rating: {{ feedback.rating }}/5
+                                </div>
+                                <form method="POST" action="{% url 'mark_feedback_read' feedback.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" 
+                                            style="background: #3498db; color: white; border: none; padding: 5px 15px; 
+                                                   border-radius: 5px; cursor: pointer; transition: background 0.3s;"
+                                            onmouseover="this.style.background='#2980b9'" 
+                                            onmouseout="this.style.background='#3498db'">
+                                        Mark as Read
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 8px; margin-top: 10px;">
+                            <p style="color: #fff; margin: 0; line-height: 1.5;">{{ feedback.comment }}</p>
+                        </div>
+
+                        {% if feedback.laundry_request %}
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                                <h4 style="color: #00fff5; margin: 0 0 10px 0; font-size: 1rem;">Related Request Items:</h4>
+                                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                    {% for item in feedback.laundry_request.laundryrequestitem_set.all %}
+                                        <span style="background: rgba(255, 255, 255, 0.1); padding: 5px 10px; border-radius: 5px; color: #fff;">
+                                            {{ item.item.name }} × {{ item.quantity }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 40px; background: rgba(255, 255, 255, 0.05); border-radius: 12px;">
+                <p style="color: #888; font-size: 1.2em;">No unread feedback notifications</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .feedback-list > div:hover {
+        transform: translateY(-2px);
+        transition: transform 0.3s ease;
+    }
+</style>
+{% endblock %} 

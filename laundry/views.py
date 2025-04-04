@@ -129,7 +129,11 @@ def request_laundry(request):
 def admin_laundry_requests(request):
     """Admin view to see all laundry requests."""
     requests = LaundryRequest.objects.all().order_by('-created_at')
-    return render(request, 'admin_request.html', {'requests': requests})
+    unread_count = Feedback.objects.filter(viewed=False).count()
+    return render(request, 'admin_request.html', {
+        'requests': requests,
+        'unread_feedback_count': unread_count
+    })
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -169,11 +173,61 @@ def update_laundry_status(request, request_id):
 @login_required
 def submit_feedback(request):
     if request.method == "POST":
-        rating = request.POST['rating']
-        comment = request.POST['comment']
-        Feedback.objects.create(user=request.user, rating=rating, comment=comment)
-        return redirect('dashboard')
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment')
+        request_id = request.POST.get('request_id')
+        
+        try:
+            # Get the laundry request
+            laundry_request = LaundryRequest.objects.get(
+                id=request_id,
+                user=request.user,
+                status='Completed'
+            )
+            
+            # Check if feedback already exists for this request
+            existing_feedback = Feedback.objects.filter(
+                user=request.user,
+                laundry_request=laundry_request
+            ).exists()
+            
+            if existing_feedback:
+                messages.error(request, "You have already submitted feedback for this request.")
+                return redirect('history')
+            
+            # Create new feedback
+            Feedback.objects.create(
+                user=request.user,
+                rating=rating,
+                comment=comment,
+                laundry_request=laundry_request,
+                viewed=False
+            )
+            
+            messages.success(request, "Thank you for your feedback!")
+            
+        except LaundryRequest.DoesNotExist:
+            messages.error(request, "Invalid request or you can only submit feedback for completed requests.")
+        
+        return redirect('history')
+        
     return render(request, 'feedback.html')
+
+@staff_member_required
+def admin_notifications(request):
+    """View for admin to see unread feedback notifications."""
+    unread_feedback = Feedback.objects.filter(viewed=False).select_related('user')
+    return render(request, 'admin_notifications.html', {'unread_feedback': unread_feedback})
+
+@staff_member_required
+def mark_feedback_read(request, feedback_id):
+    """Mark a feedback notification as read."""
+    if request.method == "POST":
+        feedback = get_object_or_404(Feedback, id=feedback_id)
+        feedback.viewed = True
+        feedback.save()
+        messages.success(request, "Feedback marked as read.")
+    return redirect('admin_notifications')
 
 from django.contrib.auth import logout
 from django.shortcuts import redirect

@@ -4,11 +4,26 @@
 
 <h2 style="text-align: center; color: #ffffff; margin-bottom: 40px;">Your Laundry History 📜</h2>
 
+{% if messages %}
+    <div style="max-width: 600px; margin: 0 auto 20px auto;">
+        {% for message in messages %}
+            <div style="padding: 15px; margin-bottom: 10px; border-radius: 8px; text-align: center;
+                        {% if message.tags == 'success' %}
+                            background-color: rgba(76, 175, 80, 0.9);
+                        {% else %}
+                            background-color: rgba(244, 67, 54, 0.9);
+                        {% endif %}
+                        color: white;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
 {% if requests %}
-<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 0 20px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding: 0 20px;">
     {% for request in requests %}
     <div style="background: linear-gradient(145deg, #23233d, #1a1a2e); padding: 20px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); transition: transform 0.3s;">
-
         <p style="color: #00adb5; font-size: 14px; margin-bottom: 8px;">
             Requested on: {{ request.created_at|date:"d M Y, H:i" }}
         </p>
@@ -24,7 +39,18 @@
 
         <div style="margin-top: 20px;">
             {% if request.status == 'Completed' %}
-                <span style="background: #4CAF50; color: white; padding: 8px 16px; border-radius: 12px;">✅ Completed</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <span style="background: #4CAF50; color: white; padding: 8px 16px; border-radius: 12px;">✅ Completed</span>
+                    
+                    <!-- Feedback Button -->
+                    <button onclick="openFeedbackModal('{{ request.id }}')"
+                            style="background: #00adb5; color: white; border: none; padding: 8px 16px; 
+                                   border-radius: 12px; cursor: pointer; transition: background 0.3s;"
+                            onmouseover="this.style.background='#008d96'" 
+                            onmouseout="this.style.background='#00adb5'">
+                        ⭐ Give Feedback
+                    </button>
+                </div>
                 <p style="margin-top: 12px; color: #00adb5;">Completed on: {{ request.completed_at|date:"d M Y, H:i" }}</p>
             {% elif request.status == 'In Progress' %}
                 <span style="background: #FFC107; color: #1a1a2e; padding: 8px 16px; border-radius: 12px;">🔄 In Progress</span>
@@ -33,7 +59,6 @@
                 <span style="background: #607D8B; color: white; padding: 8px 16px; border-radius: 12px;">⏳ Pending</span>
             {% endif %}
         </div>
-
     </div>
     {% endfor %}
 </div>
@@ -49,4 +74,101 @@
 </div>
 {% endif %}
 
+<!-- Feedback Modal -->
+<div id="feedbackModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                              background: rgba(0,0,0,0.8); z-index: 1000;">
+    <div style="position: relative; max-width: 500px; margin: 50px auto; background: white; 
+                padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+        <button onclick="closeFeedbackModal()" 
+                style="position: absolute; top: 10px; right: 10px; background: none; border: none; 
+                       font-size: 24px; cursor: pointer; color: #666;">×</button>
+        
+        <h3 style="color: #2c3e50; margin-bottom: 20px; text-align: center;">Rate Your Experience</h3>
+        
+        <form method="POST" action="{% url 'feedback' %}" id="feedbackForm">
+            {% csrf_token %}
+            <input type="hidden" name="request_id" id="requestId">
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 10px; color: #2c3e50;">Rating</label>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    {% for i in "12345" %}
+                        <label style="cursor: pointer;">
+                            <input type="radio" name="rating" value="{{ i }}" required style="display: none;">
+                            <span class="star" data-rating="{{ i }}" style="font-size: 30px; color: #ddd;">★</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 10px; color: #2c3e50;">Comments</label>
+                <textarea name="comment" required
+                    style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; 
+                           min-height: 100px; resize: vertical;"
+                    placeholder="Tell us about your experience..."></textarea>
+            </div>
+            
+            <button type="submit" 
+                style="width: 100%; padding: 12px; background: linear-gradient(45deg, #00c9a7, #008d69); 
+                       color: white; border: none; border-radius: 8px; cursor: pointer;">
+                Submit Feedback
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .star {
+        transition: color 0.2s;
+    }
+    .star:hover,
+    .star.active {
+        color: #ffc107;
+    }
+</style>
+
+<script>
+    function openFeedbackModal(requestId) {
+        document.getElementById('feedbackModal').style.display = 'block';
+        document.getElementById('requestId').value = requestId;
+    }
+    
+    function closeFeedbackModal() {
+        document.getElementById('feedbackModal').style.display = 'none';
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.star');
+        
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.dataset.rating;
+                
+                // Update visual state
+                stars.forEach(s => {
+                    if (s.dataset.rating <= rating) {
+                        s.style.color = '#ffc107';
+                        s.classList.add('active');
+                    } else {
+                        s.style.color = '#ddd';
+                        s.classList.remove('active');
+                    }
+                });
+                
+                // Select the radio button
+                const radio = this.parentElement.querySelector('input[type="radio"]');
+                radio.checked = true;
+            });
+        });
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('feedbackModal');
+            if (event.target == modal) {
+                closeFeedbackModal();
+            }
+        }
+    });
+</script>
 {% endblock %}

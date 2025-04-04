@@ -54,9 +54,18 @@ class LaundryRequestItem(models.Model):
 
 class Feedback(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    laundry_request = models.ForeignKey(LaundryRequest, on_delete=models.CASCADE, null=True, blank=True)
     rating = models.IntegerField()
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    viewed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Feedback from {self.user.username} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ['user', 'laundry_request']  # Prevent duplicate feedback
 
 
 
