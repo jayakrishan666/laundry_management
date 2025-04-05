@@ -58,22 +58,30 @@
                     </td>
 
                     <td style="padding: 16px;">
-                        {% if request.status == 'Completed' %}
-                            <span style="background: #28a745; color: white; padding: 6px 12px; border-radius: 8px;">{{ request.status }}</span>
-                        {% elif request.status == 'In Progress' %}
-                            <span style="background: #ffc107; color: #16213e; padding: 6px 12px; border-radius: 8px;">{{ request.status }}</span>
-                        {% else %}
-                            <span style="background: #6c757d; color: white; padding: 6px 12px; border-radius: 8px;">{{ request.status }}</span>
-                        {% endif %}
+                        <span class="badge {% if request.status == 'Completed' %}bg-success{% elif request.status == 'In Progress' %}bg-warning{% elif request.status == 'Recieved' %}bg-info{% else %}bg-secondary{% endif %}">
+                            {{ request.status }}
+                        </span>
                     </td>
 
                     <td style="padding: 16px;">
-                        <a href="{% url 'update_status' request.id %}"
-                           style="display: inline-block; padding: 8px 16px; background: linear-gradient(90deg, #ffffff, #ffffff); color: #0f3460; border-radius: 8px; text-decoration: none; font-weight: bold; transition: background 0.3s;"
-                           onmouseover="this.style.background='linear-gradient(90deg, #00fff5, #00adb5)'"
-                           onmouseout="this.style.background='linear-gradient(90deg, #00adb5, #00fff5)'">
-                             Update Status
-                        </a>
+                        {% if request.status != 'Completed' %}
+                        <form method="post" action="{% url 'update_laundry_status' request.id %}" class="status-update-form">
+                            {% csrf_token %}
+                            <div class="input-group">
+                                <select name="status" class="form-select" required>
+                                    <option value="Pending" {% if request.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                    <option value="Recieved" {% if request.status == 'Recieved' %}selected{% endif %}>Received</option>
+                                    <option value="In Progress" {% if request.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                    <option value="Completed" {% if request.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary">Update Status</button>
+                            </div>
+                        </form>
+                        {% else %}
+                        <span class="text-success">
+                            <i class="fas fa-check-circle"></i> Completed
+                        </span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}
@@ -88,5 +96,133 @@
     </div>
 
 </div>
+
+<style>
+.status-update-form {
+    margin-top: 1rem;
+}
+
+.status-update-form .form-select {
+    background-color: #2c2c2c;
+    color: white;
+    border-color: #4e54c8;
+}
+
+.status-update-form .form-select:focus {
+    background-color: #2c2c2c;
+    color: white;
+    border-color: #4e54c8;
+    box-shadow: 0 0 0 0.25rem rgba(78, 84, 200, 0.25);
+}
+
+.status-update-form .btn-primary {
+    background-color: #4e54c8;
+    border-color: #4e54c8;
+}
+
+.status-update-form .btn-primary:hover {
+    background-color: #3f46b5;
+    border-color: #3f46b5;
+}
+
+.card {
+    border: 1px solid #4e54c8;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(78, 84, 200, 0.3);
+}
+
+.list-group-item {
+    border-color: #4e54c8;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('.status-update-form');
+    
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const requestId = this.getAttribute('action').split('/').slice(-2, -1)[0];
+            const row = this.closest('tr');
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the status badge
+                    const badge = row.querySelector('.badge');
+                    const newStatus = formData.get('status');
+                    badge.textContent = newStatus;
+                    
+                    // Update badge color based on status
+                    badge.className = 'badge ' + getStatusClass(newStatus);
+                    
+                    // Update the status update cell
+                    const statusCell = row.querySelector('td:nth-child(6)');
+                    if (newStatus === 'Completed') {
+                        statusCell.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> Completed</span>';
+                    } else {
+                        // Keep the form but update the selected option
+                        const select = this.querySelector('select');
+                        select.value = newStatus;
+                    }
+                    
+                    // Show success message
+                    showMessage('Status updated successfully!', 'success');
+                } else {
+                    showMessage('Failed to update status.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('An error occurred while updating status.', 'error');
+            });
+        });
+    });
+    
+    function getStatusClass(status) {
+        switch(status) {
+            case 'Completed': return 'bg-success';
+            case 'In Progress': return 'bg-warning';
+            case 'Recieved': return 'bg-info';
+            default: return 'bg-secondary';
+        }
+    }
+    
+    function showMessage(message, type) {
+        // Create a temporary alert message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+        alertDiv.style.position = 'fixed';
+        alertDiv.style.top = '20px';
+        alertDiv.style.right = '20px';
+        alertDiv.style.zIndex = '1000';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        document.body.appendChild(alertDiv);
+        
+        // Remove the alert after 3 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+});
+</script>
 
 {% endblock %}

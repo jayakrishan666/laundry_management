@@ -1,3 +1,4 @@
+{% load notification_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,40 +17,123 @@
             color: white;
             font-family: Arial, sans-serif;
         }
+
         .navbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 2rem;
+            padding: 1rem;
             background: rgba(0, 0, 0, 0.7);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            flex-wrap: wrap;
         }
+
+        .navbar-brand {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+            margin-right: 1rem;
+        }
+
+        .navbar-toggler {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
         .navbar a {
             color: white;
             text-decoration: none;
-            margin-left: 20px;
             transition: color 0.3s;
+            white-space: nowrap;
         }
+
         .navbar a:hover {
             color: #4e54c8;
         }
+
         .container {
             flex-grow: 1;
-            padding: 20px;
+            padding: 15px;
             max-width: 1200px;
             margin: auto;
+            width: 100%;
         }
+
         .footer {
             text-align: center;
             padding: 1rem;
             background: rgba(0, 0, 0, 0.8);
+            font-size: 0.9rem;
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.8rem;
+            }
+
+            .navbar-toggler {
+                display: block;
+            }
+
+            .navbar-links {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                padding: 1rem 0;
+                gap: 0.8rem;
+            }
+
+            .navbar-links.active {
+                display: flex;
+            }
+
+            .navbar a {
+                padding: 0.5rem 0;
+                width: 100%;
+                text-align: center;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            /* Make modals more mobile-friendly */
+            .modal-dialog {
+                margin: 0.5rem;
+                max-width: calc(100% - 1rem);
+            }
+        }
+
+        /* Tablet Responsive Styles */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .container {
+                padding: 15px;
+            }
+
+            .navbar {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <a href="{% url 'dashboard' %}" style="font-size: 1.5rem; font-weight: bold;">Laundry System</a>
-        <div>
+        <a href="{% url 'dashboard' %}" class="navbar-brand">Laundry System</a>
+        <button class="navbar-toggler" onclick="toggleNavbar()">☰</button>
+        <div class="navbar-links">
             {% if user.is_authenticated %}
                 {% if user.is_staff %}
                     <a href="{% url 'admin_requests' %}">Admin Panel</a>
@@ -62,6 +146,16 @@
                     <a href="{% url 'request_laundry' %}">Request Laundry</a>
                 {% endif %}
                 <a href="{% url 'logout' %}" style="color: #e74c3c;">Logout</a>
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'notifications' %}">
+                        <i class="fas fa-bell"></i>
+                        {% if unread_notifications_count > 0 %}
+                        <span class="badge bg-danger">{{ unread_notifications_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                {% endif %}
             {% else %}
                 <a href="{% url 'login' %}">Login</a>
             {% endif %}
@@ -71,45 +165,50 @@
     <div class="container">
         {% block content %}{% endblock %}
     </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <footer class="footer">
         © 2025 Laundry Management System
     </footer>
-    
+
     <!-- Message Popup Modal -->
-<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title" id="messageModalLabel">Notification</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="modalMessageBody" style="color: black;">
-                <!-- Message content will be dynamically added here -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+    <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="messageModalLabel">Notification</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modalMessageBody" style="color: black;">
+                    <!-- Message content will be dynamically added here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Store messages in data attribute -->
-<div id="django-messages" data-messages="{% for message in messages %}{{ message|escapejs }}{% if not forloop.last %}||{% endif %}{% endfor %}" style="display: none;"></div>
+    <!-- Store messages in data attribute -->
+    <div id="django-messages" data-messages="{% for message in messages %}{{ message|escapejs }}{% if not forloop.last %}||{% endif %}{% endfor %}" style="display: none;"></div>
 
-<script>
-    $(document).ready(function() {
-        var messagesData = $('#django-messages').data('messages');
-        var messages = messagesData ? messagesData.split('||') : [];
-        
-        if (messages.length > 0) {
-            $('#modalMessageBody').html(messages.join('<br>'));
-            $('#messageModal').modal('show');
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        function toggleNavbar() {
+            const navbarLinks = document.querySelector('.navbar-links');
+            navbarLinks.classList.toggle('active');
         }
-    });
-</script>
 
+        $(document).ready(function() {
+            var messagesData = $('#django-messages').data('messages');
+            var messages = messagesData ? messagesData.split('||') : [];
+            
+            if (messages.length > 0) {
+                $('#modalMessageBody').html(messages.join('<br>'));
+                $('#messageModal').modal('show');
+            }
+        });
+    </script>
 </body>
 </html>

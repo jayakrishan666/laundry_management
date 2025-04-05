@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-bell"></i> Notifications 
+                    {% if unread_count > 0 %}
+                    <span class="badge bg-danger">{{ unread_count }}</span>
+                    {% endif %}
+                </h2>
+                {% if notifications %}
+                <button id="markAllRead" class="btn btn-outline-primary">
+                    <i class="fas fa-check-double"></i> Mark All as Read
+                </button>
+                {% endif %}
+            </div>
+
+            {% if notifications %}
+            <div class="notification-list">
+                {% for notification in notifications %}
+                <div class="card mb-3 notification-item {% if not notification.is_read %}unread{% endif %}" 
+                     data-notification-id="{{ notification.id }}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="mb-1" style="color: rgb(255, 0, 0);">{{ notification.message }}</p>
+                                <small class="text-muted">
+                                    {{ notification.created_at|date:"F d, Y H:i" }}
+                                </small>
+                            </div>
+                            {% if not notification.is_read %}
+                            <button class="btn btn-sm btn-outline-success mark-read">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No notifications yet!
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.notification-item {
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.notification-item.unread {
+    border-left-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.notification-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.mark-read {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.notification-item:hover .mark-read {
+    opacity: 1;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mark single notification as read
+    document.querySelectorAll('.mark-read').forEach(button => {
+        button.addEventListener('click', function() {
+            const notificationItem = this.closest('.notification-item');
+            const notificationId = notificationItem.dataset.notificationId;
+            
+            fetch(`/mark-notification-read/${notificationId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    notificationItem.classList.remove('unread');
+                    this.remove();
+                    updateUnreadCount();
+                }
+            });
+        });
+    });
+
+    // Mark all notifications as read
+    const markAllButton = document.getElementById('markAllRead');
+    if (markAllButton) {
+        markAllButton.addEventListener('click', function() {
+            fetch('/mark-all-notifications-read/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelectorAll('.notification-item.unread').forEach(item => {
+                        item.classList.remove('unread');
+                        item.querySelector('.mark-read')?.remove();
+                    });
+                    updateUnreadCount();
+                }
+            });
+        });
+    }
+
+    // Helper function to update unread count badge
+    function updateUnreadCount() {
+        const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+        const badge = document.querySelector('.badge');
+        if (badge) {
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+            } else {
+                badge.remove();
+            }
+        }
+    }
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %} 

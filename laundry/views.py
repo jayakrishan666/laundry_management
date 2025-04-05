@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
-from .models import LaundryRequest, Feedback, UserProfile
+from .models import LaundryRequest, Feedback, UserProfile, Notification
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
@@ -158,8 +158,17 @@ def update_laundry_status(request, request_id):
     
     if request.method == 'POST':
         new_status = request.POST.get('status')
+        old_status = laundry_request.status
         laundry_request.status = new_status
         laundry_request.save()
+
+        # Create notification for status change
+        notification_message = f"Your laundry request (ID: {laundry_request.id}) status has been updated from {old_status} to {new_status}."
+        Notification.objects.create(
+            user=laundry_request.user,
+            message=notification_message,
+            laundry_request=laundry_request
+        )
 
         # Send email if status is 'Completed'
         if new_status == 'Completed':
@@ -170,14 +179,16 @@ def update_laundry_status(request, request_id):
                 [laundry_request.user.email],  # Receiver email
                 fail_silently=False,
             )
-            messages.success(request, 'Status updated and email sent successfully!')
 
-        else:
-            messages.success(request, 'Status updated successfully!')
+        return JsonResponse({
+            'success': True,
+            'message': 'Status updated successfully!'
+        })
 
-        return redirect('admin_requests')
-
-    return render(request, 'update_status.html', {'request': laundry_request})
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method'
+    }, status=400)
 
 # Submit Feedback
 @login_required
@@ -450,3 +461,27 @@ def forgot_password(request):
                 return redirect('forgot_password')
     
     return render(request, 'forgot_password.html', {'otp_sent': False})
+
+@login_required
+def notifications(request):
+    """View for displaying user notifications."""
+    notifications = Notification.objects.filter(user=request.user)
+    unread_count = notifications.filter(is_read=False).count()
+    return render(request, 'notifications.html', {
+        'notifications': notifications,
+        'unread_count': unread_count
+    })
+
+@login_required
+def mark_notification_read(request, notification_id):
+    """Mark a notification as read."""
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    return JsonResponse({'success': True})
+
+@login_required
+def mark_all_notifications_read(request):
+    """Mark all notifications as read."""
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({'success': True})
