@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}User Management{% endblock %}
 {% block content %}
+{% csrf_token %}
 
 <div style="min-height: 100vh; background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 40px; color: white;">
     <h2 style="text-align: center; color: #00adb5; margin-bottom: 40px; font-size: 2.5rem;">
@@ -17,6 +18,12 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <h4 style="color: #00adb5; margin: 0;" data-user-id="{{ user.user.id }}">{{ user.user.username }}</h4>
                         <div>
+                            {% if not user.is_approved %}
+                            <button onclick="approveUser('{{ user.user.id }}')" 
+                                    style="background: #2ecc71; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; margin-right: 10px;">
+                                Approve
+                            </button>
+                            {% endif %}
                             <button onclick="viewUserHistory('{{ user.user.id }}')" 
                                     style="background: #00adb5; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; margin-right: 10px;">
                                 History
@@ -28,9 +35,14 @@
                         </div>
                     </div>
                     <div style="color: #a4b0be;">
-                        <p><strong>Name:</strong> {{ user.user.username }}</p>
+                        <p><strong>Name:</strong> {{ user.user.first_name}}</p>
                         <p><strong>Email:</strong> {{ user.user.email }}</p>
                         <p><strong>Phone:</strong> {{ user.phone }}</p>
+                        <p><strong>Status:</strong> 
+                            <span style="color: {% if user.is_approved %}#2ecc71{% else %}#ff4757{% endif %}">
+                                {% if user.is_approved %}Approved{% else %}Pending Approval{% endif %}
+                            </span>
+                        </p>
                         <p><strong>Date Joined:</strong> {{ user.user.date_joined|date:"F j, Y" }}</p>
                         <p><strong>Last Login:</strong> {{ user.user.last_login|date:"F j, Y, g:i a" }}</p>
                     </div>
@@ -68,6 +80,50 @@
 </style>
 
 <script>
+    function approveUser(userId) {
+        if (confirm('Are you sure you want to approve this user?')) {
+            fetch(`/approve-user/${userId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error approving user: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error approving user: ' + error);
+            });
+        }
+    }
+
+    function removeUser(userId) {
+        if (confirm('Are you sure you want to remove this user?')) {
+            fetch(`/remove-user/${userId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error removing user: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error removing user: ' + error);
+            });
+        }
+    }
+
     function viewUserHistory(userId) {
         const username = document.querySelector(`[data-user-id="${userId}"]`).textContent;
         fetch(`/user-history/${userId}/`)
@@ -130,40 +186,6 @@
 
     function closeHistoryModal() {
         document.getElementById('historyModal').style.display = 'none';
-    }
-
-    function removeUser(userId) {
-        if (confirm('Are you sure you want to remove this user? This action cannot be undone.')) {
-            fetch(`/remove-user/${userId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error removing user: ' + data.error);
-                }
-            });
-        }
-    }
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
     }
 </script>
 

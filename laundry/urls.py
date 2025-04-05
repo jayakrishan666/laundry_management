@@ -19,9 +19,15 @@ urlpatterns = [
     # User Management URLs
     path('user-management/', views.user_management, name='user_management'),
     path('remove-user/<int:user_id>/', views.remove_user, name='remove_user'),
+    path('approve-user/<int:user_id>/', views.approve_user, name='approve_user'),  # New approval URL
     path('user-history/<int:user_id>/', views.user_history, name='user_history'),
 
     # Feedback Notification URLs (updated to avoid admin/ conflict)
     path('staff/notifications/', views.admin_notifications, name='admin_notifications'),
     path('staff/feedback/mark-read/<int:feedback_id>/', views.mark_feedback_read, name='mark_feedback_read'),
+
+    path('profile/update/', views.update_profile, name='update_profile'),  # New URL for profile updates
+
+    # Password Reset URLs
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
 ]

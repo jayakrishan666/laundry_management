@@ -78,8 +78,12 @@ from django.contrib.auth.models import User
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone = models.CharField(max_length=15, blank=True, null=True)  # Phone number field
+    is_approved = models.BooleanField(default=False)  # New field for admin approval
     
     @property
     def unique_id(self):
         """Return the built-in User ID as the unique identifier."""
         return self.user.id
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"

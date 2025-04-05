@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Update Profile{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+
+<div style="min-height: 100vh; background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 40px; color: white;">
+    <div style="max-width: 600px; margin: 0 auto; background: #0f3460; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+        <h2 style="text-align: center; color: #00adb5; margin-bottom: 30px; font-size: 2rem;">
+            👤 Update Profile
+        </h2>
+
+        {% if messages %}
+        <div style="margin-bottom: 20px;">
+            {% for message in messages %}
+            <div style="padding: 15px; border-radius: 8px; margin-bottom: 10px; 
+                      {% if message.tags == 'success' %}
+                      background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71;
+                      {% else %}
+                      background: rgba(255, 71, 87, 0.2); border: 1px solid #ff4757;
+                      {% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'update_profile' %}" style="display: flex; flex-direction: column; gap: 20px;">
+            {% csrf_token %}
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label for="first_name" style="display: block; margin-bottom: 8px; color: #00adb5;">First Name</label>
+                    <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}"
+                           style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #2f3542; background: rgba(255,255,255,0.05); color: white;">
+                </div>
+                
+                <div>
+                    <label for="last_name" style="display: block; margin-bottom: 8px; color: #00adb5;">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}"
+                           style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #2f3542; background: rgba(255,255,255,0.05); color: white;">
+                </div>
+            </div>
+
+            <div>
+                <label for="email" style="display: block; margin-bottom: 8px; color: #00adb5;">Email</label>
+                <input type="email" id="email" name="email" value="{{ user.email }}"
+                       style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #2f3542; background: rgba(255,255,255,0.05); color: white;">
+            </div>
+
+            <div>
+                <label for="phone" style="display: block; margin-bottom: 8px; color: #00adb5;">Phone Number</label>
+                <input type="tel" id="phone" name="phone" value="{{ profile.phone }}"
+                       style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #2f3542; background: rgba(255,255,255,0.05); color: white;">
+            </div>
+
+            <div style="border-top: 1px solid #2f3542; margin: 20px 0; padding-top: 20px;">
+                <h3 style="color: #00adb5; margin-bottom: 20px;">Change Password (Optional)</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <label for="new_password" style="display: block; margin-bottom: 8px; color: #00adb5;">New Password</label>
+                        <input type="password" id="new_password" name="new_password"
+                               style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #2f3542; background: rgba(255,255,255,0.05); color: white;">
+                    </div>
+                    
+                    <div>
+                        <label for="confirm_password" style="display: block; margin-bottom: 8px; color: #00adb5;">Confirm Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password"
+                               style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #2f3542; background: rgba(255,255,255,0.05); color: white;">
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                <a href="{% url 'dashboard' %}" 
+                   style="padding: 12px 24px; border-radius: 6px; background: #2f3542; color: white; text-decoration: none; transition: all 0.3s ease;">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        style="padding: 12px 24px; border-radius: 6px; background: #00adb5; color: white; border: none; cursor: pointer; transition: all 0.3s ease;">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    input:focus {
+        outline: none;
+        border-color: #00adb5;
+    }
+    
+    button:hover, a:hover {
+        transform: translateY(-2px);
+        opacity: 0.9;
+    }
+</style>
+
+{% endblock %} 

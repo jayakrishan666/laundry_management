@@ -2,16 +2,21 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.models import User
-from .models import LaundryRequest, Feedback
+from .models import LaundryRequest, Feedback, UserProfile
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import UserProfile
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
 from .models import LaundryItem, LaundryRequestItem
 import json
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
+from django.core.mail import send_mail
+from django.conf import settings
+from django.urls import reverse
+import random
+from django.core.cache import cache
 
 # User Registration & Login
 def register_user(request):
@@ -97,11 +102,16 @@ from django.db.models import Q
 from .models import LaundryRequest, LaundryItem, LaundryRequestItem
 
 def request_laundry(request):
-    """User requests laundry with multiple items."""
-    last_request = LaundryRequest.objects.filter(user=request.user).order_by("-created_at").first()
-
-    if last_request and last_request.status != "Completed":
-        return render(request, "request_blocked.html")  # Restrict request
+    """Handle laundry request submission."""
+    # Check if user is approved
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+        if not profile.is_approved:
+            messages.error(request, "Your account is pending approval. Please wait for admin approval.")
+            return redirect('dashboard')
+    except UserProfile.DoesNotExist:
+        messages.error(request, "User profile not found.")
+        return redirect('dashboard')
 
     if request.method == "POST":
         selected_items = request.POST.getlist("items")
@@ -309,3 +319,134 @@ def user_history(request, user_id):
         return JsonResponse({'success': False, 'error': 'User not found'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+@staff_member_required
+@require_POST
+def approve_user(request, user_id):
+    """Approve a user's account."""
+    try:
+        profile = UserProfile.objects.get(user_id=user_id)
+        profile.is_approved = True
+        profile.save()
+        return JsonResponse({'success': True})
+    except UserProfile.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def update_profile(request):
+    """Update user profile information."""
+    user = request.user
+    profile = user.userprofile
+
+    if request.method == 'POST':
+        # Update user information
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.email = request.POST.get('email', user.email)
+        
+        # Update profile information
+        profile.phone = request.POST.get('phone', profile.phone)
+        
+        # Update password if provided
+        new_password = request.POST.get('new_password')
+        if new_password:
+            confirm_password = request.POST.get('confirm_password')
+            if new_password == confirm_password:
+                user.set_password(new_password)
+            else:
+                messages.error(request, 'Passwords do not match')
+                return redirect('update_profile')
+        
+        # Save changes
+        user.save()
+        profile.save()
+        
+        messages.success(request, 'Profile updated successfully')
+        return redirect('update_profile')
+    
+    return render(request, 'profile_update.html', {
+        'user': user,
+        'profile': profile
+    })
+
+def generate_otp():
+    """Generate a 6-digit OTP."""
+    return ''.join([str(random.randint(0, 9)) for _ in range(6)])
+
+def forgot_password(request):
+    """Handle password reset using OTP."""
+    if request.method == "POST":
+        step = request.POST.get('step')
+        email = request.POST.get('email')
+
+        if step == "request_otp":
+            try:
+                user = User.objects.get(email=email)
+                
+                # Generate OTP and store it in cache with 10 minutes expiry
+                otp = generate_otp()
+                cache_key = f"password_reset_otp_{email}"
+                cache.set(cache_key, otp, timeout=600)  # 600 seconds = 10 minutes
+                
+                # Send OTP via email
+                send_mail(
+                    'Password Reset OTP',
+                    f'Your OTP for password reset is: {otp}\n\nThis OTP will expire in 10 minutes.',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+                
+                messages.success(request, "OTP has been sent to your email.")
+                return render(request, 'forgot_password.html', {
+                    'otp_sent': True,
+                    'email': email
+                })
+                
+            except User.DoesNotExist:
+                messages.error(request, "No user found with this email address.")
+                return render(request, 'forgot_password.html', {'otp_sent': False})
+
+        elif step == "verify_otp":
+            try:
+                user = User.objects.get(email=email)
+                otp = request.POST.get('otp')
+                new_password = request.POST.get('new_password')
+                confirm_password = request.POST.get('confirm_password')
+                
+                # Verify OTP
+                cache_key = f"password_reset_otp_{email}"
+                stored_otp = cache.get(cache_key)
+                
+                if not stored_otp or otp != stored_otp:
+                    messages.error(request, "Invalid or expired OTP.")
+                    return render(request, 'forgot_password.html', {
+                        'otp_sent': True,
+                        'email': email
+                    })
+                
+                # Verify passwords match
+                if new_password != confirm_password:
+                    messages.error(request, "Passwords do not match.")
+                    return render(request, 'forgot_password.html', {
+                        'otp_sent': True,
+                        'email': email
+                    })
+                
+                # Update password
+                user.set_password(new_password)
+                user.save()
+                
+                # Delete OTP from cache
+                cache.delete(cache_key)
+                
+                messages.success(request, "Your password has been reset successfully. You can now login.")
+                return redirect('login')
+                
+            except User.DoesNotExist:
+                messages.error(request, "User not found.")
+                return redirect('forgot_password')
+    
+    return render(request, 'forgot_password.html', {'otp_sent': False})
