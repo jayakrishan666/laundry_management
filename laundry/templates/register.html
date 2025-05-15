@@ -35,14 +35,14 @@
                 <div id="emailError" class="error-message"></div>
             </div>
 
-            <div style="margin-bottom: 15px;">
+            <!-- <div style="margin-bottom: 15px;">
                 <input type="tel" name="phone" id="phone" placeholder="Phone Number" required
                     pattern="[0-9]{10}" maxlength="10"
                     title="Please enter a 10-digit phone number"
                     style="width: 90%; padding: 10px; border: 2px solid transparent; border-radius: 8px; background: #2b2b3b; color: white; outline: none;"
                     oninput="validateField('phone')">
                 <div id="phoneError" class="error-message"></div>
-            </div>
+            </div> -->
 
             <div style="margin-bottom: 15px;">
                 <input type="text" name="username" id="username" placeholder="Username" required
@@ -55,8 +55,8 @@
 
             <div style="margin-bottom: 15px;">
                 <input type="password" name="password" id="password" placeholder="Password" required
-                    pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
-                    title="Password must be at least 8 characters long and include both letters and numbers"
+                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                    title="Password must be at least 8 characters long and include uppercase, lowercase, number and special character"
                     style="width: 90%; padding: 10px; border: 2px solid transparent; border-radius: 8px; background: #2b2b3b; color: white; outline: none;"
                     oninput="validateField('password')">
                 <div id="passwordError" class="error-message"></div>
@@ -134,8 +134,8 @@
                 break;
                 
             case 'password':
-                if (!field.value.match(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/)) {
-                    errorDiv.textContent = 'Password must be at least 8 characters with letters and numbers';
+                if (!field.value.match(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)) {
+                    errorDiv.textContent = 'Password must be at least 8 characters with uppercase, lowercase, number and special character';
                 }
                 break;
                 
