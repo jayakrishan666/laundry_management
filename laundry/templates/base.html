@@ -144,32 +144,48 @@
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
                         {% if user.is_staff %}
+                            {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'admin_requests' %}">Laundry Requests</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'user_management' %}">User Management</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'admin_notifications' %}">Feedback</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'add_laundry_item' %}">Manage Items</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'request_laundry' %}">Request Laundry</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'history' %}">History</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                                </li>
+                            {% endif %}
+                        {% endif %}
+                    {% else %}
+                        {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'admin_requests' %}">Admin Requests</a>
+                                <a class="nav-link" href="{% url 'login' %}">Login</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'user_management' %}">User Management</a>
+                                <a class="nav-link" href="{% url 'register' %}">Register</a>
                             </li>
                         {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'request_laundry' %}">Request Laundry</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'dashboard' %}">dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'history' %}">History</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'register' %}">Register</a>
-                        </li>
                     {% endif %}
                 </ul>
             </div>
