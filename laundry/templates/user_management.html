@@ -36,8 +36,10 @@
                     </div>
                     <div style="color: #a4b0be;">
                         <p><strong>Name:</strong> {{ user.user.first_name}}</p>
+                        <p><strong>ID:</strong> {{ user.user.id }}</p>
                         <p><strong>Email:</strong> {{ user.user.email }}</p>
                         <p><strong>Phone:</strong> {{ user.phone }}</p>
+
                         <p><strong>Status:</strong> 
                             <span style="color: {% if user.is_approved %}#2ecc71{% else %}#ff4757{% endif %}">
                                 {% if user.is_approved %}Approved{% else %}Pending Approval{% endif %}

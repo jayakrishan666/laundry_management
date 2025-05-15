@@ -16,13 +16,10 @@
         {% endfor %}
     {% endif %}
 
-    <form method="POST" action="" style="max-width: 800px; margin: 0 auto;" onsubmit="return validateTotalQuantity()">
+    <form method="POST" action="" style="max-width: 800px; margin: 0 auto;">
         {% csrf_token %}
         
         <div style="background: #0f3460; padding: clamp(15px, 3vw, 30px); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
-            <div style="text-align: center; margin-bottom: 20px; color: #00fff5;">
-                Total Items: <span id="totalQuantity">0</span>/20
-            </div>
             <div class="items-grid" style="display: grid; gap: 20px;">
                 {% for item in items %}
                 <div class="item-container" style="background: rgba(255,255,255,0.05); padding: clamp(12px, 2vw, 20px); border-radius: 12px; transition: all 0.3s ease;">
@@ -48,8 +45,7 @@
                                    name="quantities" 
                                    min="1" 
                                    value="1" 
-                                   style="width: clamp(40px, 8vw, 50px); padding: 4px; border: 1px solid #00adb5; border-radius: 6px; background: transparent; color: white; text-align: center; font-size: clamp(0.9rem, 2vw, 1rem);"
-                                   onchange="updateTotalQuantity()">
+                                   style="width: clamp(40px, 8vw, 50px); padding: 4px; border: 1px solid #00adb5; border-radius: 6px; background: transparent; color: white; text-align: center; font-size: clamp(0.9rem, 2vw, 1rem);">
                             <button type="button" 
                                     onclick="adjustQuantity(this, 1)" 
                                     style="width: clamp(24px, 4vw, 28px); height: clamp(24px, 4vw, 28px); border: none; border-radius: 6px; background: #00adb5; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: clamp(16px, 3vw, 18px);">
@@ -130,32 +126,6 @@
 </style>
 
 <script>
-    let totalQuantity = 0;
-    const MAX_QUANTITY = 20;
-
-    function updateTotalQuantity() {
-        totalQuantity = 0;
-        document.querySelectorAll('input[type="number"]').forEach(input => {
-            if (input.closest('.item-container').querySelector('input[type="checkbox"]').checked) {
-                totalQuantity += parseInt(input.value) || 0;
-            }
-        });
-        document.getElementById('totalQuantity').textContent = totalQuantity;
-    }
-
-    function validateTotalQuantity() {
-        updateTotalQuantity();
-        if (totalQuantity > MAX_QUANTITY) {
-            alert(`Total quantity cannot exceed ${MAX_QUANTITY} items. Current total: ${totalQuantity}`);
-            return false;
-        }
-        if (totalQuantity === 0) {
-            alert('Please select at least one item');
-            return false;
-        }
-        return true;
-    }
-
     function toggleItem(checkbox) {
         const container = checkbox.closest('.item-container');
         if (checkbox.checked) {
@@ -164,40 +134,14 @@
         } else {
             container.style.background = 'rgba(255,255,255,0.05)';
             container.style.transform = 'scale(1)';
-            // Reset quantity to 1 when unchecking
-            container.querySelector('input[type="number"]').value = 1;
         }
-        updateTotalQuantity();
     }
 
     function adjustQuantity(button, amount) {
         const input = button.parentNode.querySelector('input[type="number"]');
-        const checkbox = input.closest('.item-container').querySelector('input[type="checkbox"]');
-        
-        if (!checkbox.checked) {
-            checkbox.checked = true;
-            toggleItem(checkbox);
-        }
-
         let currentValue = parseInt(input.value, 10) || 1;
-        let newValue = currentValue + amount;
-        
-        // Check if the new total would exceed the limit
-        const otherQuantities = Array.from(document.querySelectorAll('input[type="number"]'))
-            .filter(inp => inp !== input && inp.closest('.item-container').querySelector('input[type="checkbox"]').checked)
-            .reduce((sum, inp) => sum + (parseInt(inp.value) || 0), 0);
-        
-        if (newValue + otherQuantities > MAX_QUANTITY) {
-            alert(`Cannot add more items. Total quantity cannot exceed ${MAX_QUANTITY}`);
-            return;
-        }
-        
-        input.value = Math.max(1, newValue);
-        updateTotalQuantity();
+        input.value = Math.max(1, currentValue + amount);
     }
-
-    // Initialize total quantity on page load
-    document.addEventListener('DOMContentLoaded', updateTotalQuantity);
 </script>
 
 {% endblock %}
