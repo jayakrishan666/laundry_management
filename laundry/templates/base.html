@@ -1,11 +1,14 @@
 {% load notification_tags %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Laundry Management{% endblock %}</title>
+    <title>{% block title %}Laundry Management System{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -128,41 +131,52 @@
             }
         }
     </style>
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar">
-        <a href="{% url 'dashboard' %}" class="navbar-brand">Laundry System</a>
-        <button class="navbar-toggler" onclick="toggleNavbar()">☰</button>
-        <div class="navbar-links">
-            {% if user.is_authenticated %}
-                {% if user.is_staff %}
-                    <a href="{% url 'admin_requests' %}">Admin Panel</a>
-                    <a href="{% url 'user_management' %}">User Management</a>
-                    <a href="{% url 'add_laundry_item' %}">Add Items</a>
-                {% else %}
-                    <a href="{% url 'dashboard' %}">Dashboard</a>
-                    <a href="{% url 'history' %}">History</a>
-                    <a href="{% url 'update_profile' %}">Update Profile</a>
-                    <a href="{% url 'request_laundry' %}">Request Laundry</a>
-                {% endif %}
-                <a href="{% url 'logout' %}" style="color: #e74c3c;">Logout</a>
-                {% if user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'notifications' %}">
-                        <i class="fas fa-bell"></i>
-                        {% if unread_notifications_count > 0 %}
-                        <span class="badge bg-danger">{{ unread_notifications_count }}</span>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">LMS</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        {% if user.is_staff %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'admin_requests' %}">Admin Requests</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'user_management' %}">User Management</a>
+                            </li>
                         {% endif %}
-                    </a>
-                </li>
-                {% endif %}
-            {% else %}
-                <a href="{% url 'login' %}">Login</a>
-            {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'request_laundry' %}">Request Laundry</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'dashboard' %}">dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'history' %}">History</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
     </nav>
 
-    <div class="container">
+    <div class="container mt-4">
         {% block content %}{% endblock %}
     </div>
 
@@ -210,5 +224,6 @@
             }
         });
     </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

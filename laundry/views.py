@@ -101,6 +101,7 @@ def request_history(request):
 from django.db.models import Q
 from .models import LaundryRequest, LaundryItem, LaundryRequestItem
 
+@login_required
 def request_laundry(request):
     """Handle laundry request submission."""
     # Check if user is approved
@@ -111,6 +112,15 @@ def request_laundry(request):
             return redirect('dashboard')
     except UserProfile.DoesNotExist:
         messages.error(request, "User profile not found.")
+        return redirect('dashboard')
+
+    # Check for incomplete requests
+    incomplete_requests = LaundryRequest.objects.filter(
+        user=request.user
+    ).exclude(status='Completed').exists()
+
+    if incomplete_requests:
+        messages.warning(request, 'You have an incomplete laundry request. Please wait for it to be completed before making a new request.')
         return redirect('dashboard')
 
     if request.method == "POST":
@@ -128,6 +138,7 @@ def request_laundry(request):
                     quantity=int(quantities[i])
                 )
 
+            messages.success(request, 'Laundry request submitted successfully!')
             return redirect("dashboard")
 
     items = LaundryItem.objects.all()
